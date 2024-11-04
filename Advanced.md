@@ -425,6 +425,9 @@ class Account {
   - Arrow functions `() => {}` do
 - Uncalled methods `obj.method` do not bind `this` to `obj`
   - Bound methods `obj.method.bind(obj)` do
+
+### Polyfills
+
 - Hypothetical implementation if `bind` (2009) wasn't built in:
 
 ```js
@@ -435,15 +438,6 @@ Function.prototype.bind = function (obj, ...xs) {
     //      rest parameters          spread operator
 };
 ```
-
-> **Exercise:**
-> - The above `bind` implementation is a function returning an arrow function
-> - Which other combination(s) could also (be made to) work?
->   - function returning function
->   - arrow function returning function
->   - arrow function returning arrow function
-
-### Polyfills
 
 - Since 2023, arrays have a `toSorted` method:
 
