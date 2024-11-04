@@ -638,3 +638,211 @@ import { callback } from "filename.js";
 document.getElementById("button").onclick = callback;
 </script>
 ```
+
+## Privacy
+
+- Before 2022, JavaScript had no private properties:
+
+```js
+class Account {
+    constructor(initialBalance) {
+        this.balance = initialBalance;
+    }
+
+    deposit(amount) {
+        this.balance += amount;
+    }
+
+    getBalance() {
+        return this.balance;
+    }
+}
+
+const a = new Account(123);
+
+a.balance = 1000000; // whoops
+```
+
+### ES2022
+
+- Since 2022, private properties are marked with the `#` prefix:
+
+```js
+class Account {
+    #balance; // mandatory declaration
+
+    constructor(initialBalance) {
+        this.#balance = initialBalance;
+    }
+
+    deposit(amount) {
+        this.#balance += amount;
+    }
+
+    getBalance() {
+        return this.#balance;
+    }
+}
+
+const a = new Account(123);
+
+a.#balance = 1000000;
+// Uncaught SyntaxError: Private field '#balance' ...
+// Property '#balance' is not accessible outside class 'Account' ...
+```
+
+- Many JavaScript programmers are not aware of this syntax, yet
+
+### ES2015
+
+- Between 2015 and 2022, private properties could be simulated with modules and `WeakMap`s:
+
+```js
+// file Account.js
+
+const properties = new WeakMap(); // unexported, i.e. inaccessible outside the module
+
+export class Account {
+    constructor(initialBalance) {
+        properties.set(this, {
+            balance: initialBalance,
+        });
+    }
+
+    deposit(amount) {
+        properties.get(this).balance += amount;
+    }
+
+    getBalance() {
+        return properties.get(this).balance;
+    }
+}
+```
+
+```js
+// some other file
+
+import { Account } from './Account.js';
+
+const a = new Account(123);
+
+properties.get(this).balance = 1000000;
+// Uncaught ReferenceError: properties is not defined
+```
+
+- Why `WeakMap` instead of `Map`?
+  - A normal `Map` would keep growing with every `new Account`
+  - But a `WeakMap` can shrink during garbage collection
+- This approach to privacy is not widespread
+
+### 1995 Closures
+
+- Closures were always powerful enough to simulate privacy:
+
+```js
+function createAccount(balance) {
+    return {
+        deposit: function(amount) {
+            balance += amount;
+        },
+
+        getBalance: function() {
+            return balance;
+        },
+    };
+}
+
+const a = createAccount(123);
+
+a.balance = 1000000; // unrelated property
+a.getBalance()       // 123
+a.balance            // 1000000
+```
+
+- Note how `deposit` and `getBalance` close over `balance`
+  - That `balance` is *not* an object property!
+- Also note the low number of keywords
+- Lisp programmers love this style
+  - Other programmers... tend not to
+
+### 2009 freeze
+
+- `Object.freeze` prevents properties from being added (or modified):
+
+```js
+function createAccount(balance) {
+    return Object.freeze({
+        deposit: function(amount) {
+            balance += amount;
+        },
+
+        getBalance: function() {
+            return balance;
+        },
+    });
+}
+
+const a = createAccount(123);
+
+a.balance = 1000000; // fails silently
+a.getBalance()       // 123
+a.balance            // undefined
+```
+
+### 2015 strict mode
+
+```js
+"use strict"; // default inside modules, btw
+
+function createAccount(balance) {
+    return Object.freeze({
+        deposit(amount) {
+            balance += amount;
+        },
+
+        getBalance() {
+            return balance;
+        },
+    });
+}
+
+const a = createAccount(123);
+
+a.balance = 1000000;
+// Uncaught TypeError: Cannot add property balance, object is not extensible
+```
+
+- The only way to provide true privacy before 2022
+- In practice, programmers either
+  - just don't care about privacy that much, or
+  - use `private` in TypeScript:
+
+### TypeScript
+
+- The TypeScript compiler checks `private`, and then compiles it away:
+
+```ts
+class Account {
+    private balance: number;
+
+    constructor(initialBalance: number) {
+        this.balance = initialBalance;
+    }
+
+    // ...
+}
+```
+
+- The property and constructor can be fused together:
+
+```ts
+class Account {
+    constructor(private balance: number) {
+    }
+
+    // ...
+}
+```
+
+- This approach to privacy is very popular
+- Everybody knows `private` from some other language
