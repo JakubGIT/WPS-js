@@ -7,36 +7,138 @@ const COLOURS = [
 ] as const;
 
 const SHAPES = [
+  // Shape 1: Square (no change in rotations)
   [
-    [1, 1],
-    [1, 1],
+    [
+      [1, 1],
+      [1, 1],
+    ],
+    [
+      [1, 1],
+      [1, 1],
+    ],
+    [
+      [1, 1],
+      [1, 1],
+    ],
+    [
+      [1, 1],
+      [1, 1],
+    ],
   ],
+
+  // Shape 2: F-Shape
   [
-    [1, 1],
-    [1, 0],
-    [1, 0],
+    [
+      [1, 1],
+      [1, 0],
+      [1, 0],
+    ],
+    [
+      [1, 0, 0],
+      [1, 1, 1],
+    ],
+    [
+      [0, 1],
+      [0, 1],
+      [1, 1],
+    ],
+    [
+      [1, 1, 1],
+      [0, 0, 1],
+    ],
   ],
+
+  // Shape 3: Z-Shape
   [
-    [1, 0],
-    [1, 0],
-    [1, 1],
+    [
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
+    [
+      [0, 1, 1],
+      [1, 1, 0],
+    ],
+    [
+      [1, 0],
+      [1, 1],
+      [0, 1],
+    ],
+    [
+      [0, 1, 1],
+      [1, 1, 0],
+    ],
   ],
+
+  // Shape 4: K
   [
-    [1, 0],
-    [1, 1],
-    [0, 1],
+    [
+      [0, 1],
+      [1, 1],
+      [0, 1],
+    ],
+    [
+      [0, 1, 0],
+      [1, 1, 1],
+    ],
+    [
+      [1, 0],
+      [1, 1],
+      [1, 0],
+    ],
+    [
+      [1, 1, 1],
+      [0, 1, 0],
+    ],
   ],
+
+  // Shape 5: L-Shape
   [
-    [1, 0],
-    [1, 1],
-    [1, 0],
+    [
+      [1, 0],
+      [1, 0],
+      [1, 1],
+    ],
+    [
+      [1, 1, 1],
+      [1, 0, 0],
+    ],
+    [
+      [1, 1],
+      [0, 1],
+      [0, 1],
+    ],
+    [
+      [0, 0, 1],
+      [1, 1, 1],
+    ],
   ],
+
+  // Shape 6: Reverse L-Shape
   [
-    [0, 1],
-    [1, 1],
-    [1, 0],
+    [
+      [0, 1],
+      [0, 1],
+      [1, 1],
+    ],
+    [
+      [1, 0, 0],
+      [1, 1, 1],
+    ],
+    [
+      [1, 1],
+      [1, 0],
+      [1, 0],
+    ],
+    [
+      [1, 1, 1],
+      [0, 0, 1],
+    ],
   ],
-  [[1], [1], [1], [1]],
+
+  // Shape 7: Line (I-Shape)
+  [[[1], [1], [1], [1]], [[1, 1, 1, 1]], [[1], [1], [1], [1]], [[1, 1, 1, 1]]],
 ] as const;
 
 class Board {
@@ -142,12 +244,17 @@ class Board {
 
   // Check if the current piece collides with the grid (e.g., the bottom or other pieces)
   checkCollision(): boolean {
-    for (let row = 0; row < this.currentPiece.shape.length; row++) {
-      for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
+    for (let row = 0; row < this.currentPiece.getCurrentShape().length; row++) {
+      for (
+        let col = 0;
+        col < this.currentPiece.getCurrentShape()[row].length;
+        col++
+      ) {
         if (
-          this.currentPiece.shape[row][col] === 1 &&
-          (this.currentPiece.y + row >= this.height || // Hits the bottom
-            this.grid[this.currentPiece.y + row]?.[this.currentPiece.x + col]) // Collides with other pieces
+          (this.currentPiece.getCurrentShape()[row][col] === 1 &&
+            this.currentPiece.x + col >= this.width) || // Right side out of bounds
+          this.currentPiece.y + row >= this.height || // Hits the bottom
+          this.grid[this.currentPiece.y + row]?.[this.currentPiece.x + col] // Collides with other pieces
         ) {
           return true;
         }
@@ -158,9 +265,13 @@ class Board {
 
   // Place the current piece onto the board
   placePiece() {
-    for (let row = 0; row < this.currentPiece.shape.length; row++) {
-      for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
-        if (this.currentPiece.shape[row][col] === 1) {
+    for (let row = 0; row < this.currentPiece.getCurrentShape().length; row++) {
+      for (
+        let col = 0;
+        col < this.currentPiece.getCurrentShape()[row].length;
+        col++
+      ) {
+        if (this.currentPiece.getCurrentShape()[row][col] === 1) {
           this.grid[this.currentPiece.y + row][this.currentPiece.x + col] =
             this.currentPiece.color;
         }
@@ -195,6 +306,60 @@ class Board {
       this.softDrop();
     }
   }
+
+  rotate() {
+    if (this.gameOver) {
+      return;
+    }
+    this.currentPiece.rotate(true);
+    if (!this.checkCollision()) {
+      return;
+    }
+    // try move right
+    for (let i = 0; i < 3; ++i) {
+      this.currentPiece.moveRight();
+      if (!this.checkCollision()) {
+        return;
+      }
+    }
+    // undo moving right
+    for (let i = 0; i < 3; ++i) {
+      this.currentPiece.moveLeft();
+    }
+    // try move left
+    for (let i = 0; i < 3; ++i) {
+      this.currentPiece.moveLeft();
+      if (!this.checkCollision()) {
+        return;
+      }
+    }
+    // undo moving left
+    for (let i = 0; i < 3; ++i) {
+      this.currentPiece.moveRight();
+    }
+
+    // no chance, undo
+    this.currentPiece.rotate(false);
+  }
+
+  movePieceLeft() {
+    if (this.gameOver || this.currentPiece.x <= 0) {
+      return;
+    }
+    this.currentPiece.moveLeft();
+    if (this.checkCollision()) {
+      this.currentPiece.moveRight(); // Undo the movement
+    }
+  }
+  movePieceRight() {
+    if (this.gameOver || this.currentPiece.x >= this.width) {
+      return;
+    }
+    this.currentPiece.moveRight();
+    if (this.checkCollision()) {
+      this.currentPiece.moveLeft(); // Undo the movement
+    }
+  }
 }
 
 class Piece {
@@ -202,7 +367,8 @@ class Piece {
   x: number;
   y: number;
   color: (typeof COLOURS)[number];
-  shape: (typeof SHAPES)[number];
+  private readonly shape: (typeof SHAPES)[number];
+  private rotation: number = 0;
 
   constructor(x: number, y: number) {
     this.x = x;
@@ -211,14 +377,16 @@ class Piece {
     this.shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
   }
 
+  getCurrentShape = () => this.shape[this.rotation];
+
   // Draw the piece on the canvas
   draw(context: CanvasRenderingContext2D, blockSize: number) {
     context.fillStyle = this.color;
 
     // Draw each block of the piece
-    for (let row = 0; row < this.shape.length; row++) {
-      for (let col = 0; col < this.shape[row].length; col++) {
-        if (this.shape[row][col] === 1) {
+    for (let row = 0; row < this.shape[this.rotation].length; row++) {
+      for (let col = 0; col < this.shape[this.rotation][row].length; col++) {
+        if (this.getCurrentShape()[row][col] === 1) {
           context.fillRect(
             (this.x + col) * blockSize + 1,
             (this.y + row) * blockSize + 1,
@@ -244,6 +412,10 @@ class Piece {
   moveRight() {
     this.x += 1;
   }
+
+  rotate(clockwise: boolean) {
+    this.rotation = (this.rotation + (clockwise ? 1 : -1) + 4) % 4;
+  }
 }
 
 // Get the canvas element and its context
@@ -266,20 +438,21 @@ const board = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE);
 function handleKeyPress(event: KeyboardEvent) {
   switch (event.key) {
     case 'ArrowLeft':
-      if (board.currentPiece.x > 0) {
-        board.currentPiece.moveLeft();
-      }
+      board.movePieceLeft();
       break;
     case 'ArrowRight':
-      if (board.currentPiece.x < BOARD_WIDTH - 2) {
-        board.currentPiece.moveRight();
-      }
+      board.movePieceRight();
+
       break;
     case 'ArrowDown':
       board.softDrop();
       break;
+    case 'ArrowUp':
+      board.rotate();
+      break;
     case ' ':
       board.hardDrop();
+      break;
   }
   draw(); // Redraw the board and piece
 }
