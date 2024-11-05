@@ -6,6 +6,39 @@ const COLOURS = [
   '#bae1ff',
 ] as const;
 
+const SHAPES = [
+  [
+    [1, 1],
+    [1, 1],
+  ],
+  [
+    [1, 1],
+    [1, 0],
+    [1, 0],
+  ],
+  [
+    [1, 0],
+    [1, 0],
+    [1, 1],
+  ],
+  [
+    [1, 0],
+    [1, 1],
+    [0, 1],
+  ],
+  [
+    [1, 0],
+    [1, 1],
+    [1, 0],
+  ],
+  [
+    [0, 1],
+    [1, 1],
+    [1, 0],
+  ],
+  [[1], [1], [1], [1]],
+] as const;
+
 class Board {
   width: number;
   height: number;
@@ -18,15 +51,7 @@ class Board {
     this.height = height;
     this.blockSize = blockSize;
     this.grid = Array.from({ length: height }, () => Array(width).fill(0));
-    this.currentPiece = new Piece(
-      4,
-      0,
-      COLOURS[Math.floor(Math.random() * COLOURS.length)],
-      [
-        [1, 1],
-        [1, 1],
-      ]
-    );
+    this.currentPiece = new Piece(4, 0);
   }
 
   // Draw the grid and the current piece
@@ -120,15 +145,7 @@ class Board {
 
   // Spawn a new piece at the top of the board
   spawnNewPiece() {
-    this.currentPiece = new Piece(
-      4,
-      0,
-      COLOURS[Math.floor(Math.random() * COLOURS.length)],
-      [
-        [1, 1],
-        [1, 1],
-      ]
-    );
+    this.currentPiece = new Piece(4, 0);
   }
 
   // Soft drop the current piece (move down)
@@ -154,18 +171,13 @@ class Piece {
   x: number;
   y: number;
   color: (typeof COLOURS)[number];
-  shape: number[][]; // A 2x2 block for the "O" piece
+  shape: (typeof SHAPES)[number];
 
-  constructor(
-    x: number,
-    y: number,
-    color: (typeof COLOURS)[number],
-    shape: number[][]
-  ) {
+  constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
-    this.color = color;
-    this.shape = shape;
+    this.color = COLOURS[Math.floor(Math.random() * COLOURS.length)];
+    this.shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
   }
 
   // Draw the piece on the canvas
