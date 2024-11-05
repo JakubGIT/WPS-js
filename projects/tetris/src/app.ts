@@ -1,4 +1,10 @@
-const COLOURS = ['yellow', 'green', 'orange', 'red', 'blue', 'black'] as const;
+const COLOURS = [
+  '#ffb3ba',
+  '#ffdfba',
+  '#ffffba',
+  '#baffc9',
+  '#bae1ff',
+] as const;
 
 class Board {
   width: number;
@@ -215,7 +221,6 @@ const board = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE);
 
 // Handle key presses to move the piece
 function handleKeyPress(event: KeyboardEvent) {
-  console.log(event.key);
   switch (event.key) {
     case 'ArrowLeft':
       if (board.currentPiece.x > 0) {
