@@ -1,7 +1,9 @@
+const COLOURS = ['yellow', 'green', 'orange', 'red', 'blue', 'black'] as const;
+
 class Board {
   width: number;
   height: number;
-  grid: number[][];
+  grid: ((typeof COLOURS)[number] | '')[][];
   blockSize: number;
   currentPiece: Piece;
 
@@ -10,10 +12,15 @@ class Board {
     this.height = height;
     this.blockSize = blockSize;
     this.grid = Array.from({ length: height }, () => Array(width).fill(0));
-    this.currentPiece = new Piece(3, 0, 'yellow', [
-      [1, 1],
-      [1, 1],
-    ]);
+    this.currentPiece = new Piece(
+      4,
+      0,
+      COLOURS[Math.floor(Math.random() * COLOURS.length)],
+      [
+        [1, 1],
+        [1, 1],
+      ]
+    );
   }
 
   // Draw the grid and the current piece
@@ -64,8 +71,8 @@ class Board {
     // Draw the placed pieces
     for (let row = 0; row < this.grid.length; row++) {
       for (let col = 0; col < this.grid[row].length; col++) {
-        if (this.grid[row][col] === 1) {
-          context.fillStyle = 'yellow';
+        if (this.grid[row][col]) {
+          context.fillStyle = this.grid[row][col];
           context.fillRect(
             col * this.blockSize + 1,
             row * this.blockSize + 1,
@@ -84,9 +91,7 @@ class Board {
         if (
           this.currentPiece.shape[row][col] === 1 &&
           (this.currentPiece.y + row >= this.height || // Hits the bottom
-            this.grid[this.currentPiece.y + row]?.[
-              this.currentPiece.x + col
-            ] === 1) // Collides with other pieces
+            this.grid[this.currentPiece.y + row]?.[this.currentPiece.x + col]) // Collides with other pieces
         ) {
           return true;
         }
@@ -100,7 +105,8 @@ class Board {
     for (let row = 0; row < this.currentPiece.shape.length; row++) {
       for (let col = 0; col < this.currentPiece.shape[row].length; col++) {
         if (this.currentPiece.shape[row][col] === 1) {
-          this.grid[this.currentPiece.y + row][this.currentPiece.x + col] = 1;
+          this.grid[this.currentPiece.y + row][this.currentPiece.x + col] =
+            this.currentPiece.color;
         }
       }
     }
@@ -108,10 +114,15 @@ class Board {
 
   // Spawn a new piece at the top of the board
   spawnNewPiece() {
-    this.currentPiece = new Piece(3, 0, 'yellow', [
-      [1, 1],
-      [1, 1],
-    ]);
+    this.currentPiece = new Piece(
+      4,
+      0,
+      COLOURS[Math.floor(Math.random() * COLOURS.length)],
+      [
+        [1, 1],
+        [1, 1],
+      ]
+    );
   }
 
   // Soft drop the current piece (move down)
@@ -129,10 +140,15 @@ class Piece {
   // Properties of the piece
   x: number;
   y: number;
-  color: string;
+  color: (typeof COLOURS)[number];
   shape: number[][]; // A 2x2 block for the "O" piece
 
-  constructor(x: number, y: number, color: string, shape: number[][]) {
+  constructor(
+    x: number,
+    y: number,
+    color: (typeof COLOURS)[number],
+    shape: number[][]
+  ) {
     this.x = x;
     this.y = y;
     this.color = color;
