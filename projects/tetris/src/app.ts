@@ -45,6 +45,7 @@ class Board {
   grid: ((typeof COLOURS)[number] | '')[][];
   blockSize: number;
   currentPiece: Piece;
+  gameOver = false;
 
   constructor(width: number, height: number, blockSize: number) {
     this.width = width;
@@ -58,6 +59,12 @@ class Board {
   draw(context: CanvasRenderingContext2D) {
     // Draw the grid with borders
     this.drawGrid(context);
+
+    if (this.checkCollision()) {
+      this.gameOver = true;
+      this.drawGameOver(context);
+      // TODO: render only a part of the piece to avoid overlapping
+    }
 
     // Draw the current piece
     this.currentPiece.draw(context, this.blockSize);
@@ -115,6 +122,24 @@ class Board {
     }
   }
 
+  private drawGameOver(context: CanvasRenderingContext2D) {
+    if (!context) {
+      return;
+    }
+
+    context.fillStyle = '#ff0000'; // Red color for the text
+    context.font = '40px Arial'; // Set font size and style
+    context.textAlign = 'center'; // Center the text horizontally
+    context.textBaseline = 'middle'; // Center the text vertically
+
+    // Draw "GAME OVER" in the center of the canvas
+    context.fillText(
+      'GAME OVER',
+      (this.width * this.blockSize) / 2,
+      (this.height * this.blockSize) / 2
+    );
+  }
+
   // Check if the current piece collides with the grid (e.g., the bottom or other pieces)
   checkCollision(): boolean {
     for (let row = 0; row < this.currentPiece.shape.length; row++) {
@@ -150,6 +175,9 @@ class Board {
 
   // Soft drop the current piece (move down)
   softDrop() {
+    if (this.gameOver) {
+      return;
+    }
     this.currentPiece.moveDown();
     if (this.checkCollision()) {
       this.currentPiece.y -= 1; // Undo the move if a collision occurred
@@ -159,6 +187,9 @@ class Board {
   }
 
   hardDrop() {
+    if (this.gameOver) {
+      return;
+    }
     const currentPieceBackup = this.currentPiece;
     while (currentPieceBackup === this.currentPiece) {
       this.softDrop();
