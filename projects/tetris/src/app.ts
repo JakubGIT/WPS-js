@@ -134,6 +134,13 @@ class Board {
       this.spawnNewPiece();
     }
   }
+
+  hardDrop() {
+    const currentPieceBackup = this.currentPiece;
+    while (currentPieceBackup === this.currentPiece) {
+      this.softDrop();
+    }
+  }
 }
 
 class Piece {
@@ -208,6 +215,7 @@ const board = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE);
 
 // Handle key presses to move the piece
 function handleKeyPress(event: KeyboardEvent) {
+  console.log(event.key);
   switch (event.key) {
     case 'ArrowLeft':
       if (board.currentPiece.x > 0) {
@@ -222,6 +230,8 @@ function handleKeyPress(event: KeyboardEvent) {
     case 'ArrowDown':
       board.softDrop();
       break;
+    case ' ':
+      board.hardDrop();
   }
   draw(); // Redraw the board and piece
 }
