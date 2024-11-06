@@ -145,6 +145,11 @@ const GRAVITY_SPEED_IN_MS = 1000;
 const LEVEL_DECREASE_IN_MS = 400;
 const MAX_SPEED_IN_MS = 100;
 
+const penalties: { true: ''[]; false: ''[] } = {
+  true: [],
+  false: [],
+};
+
 class Board {
   width: number;
   height: number;
@@ -159,7 +164,8 @@ class Board {
     width: number,
     height: number,
     blockSize: number,
-    private readonly context: CanvasRenderingContext2D
+    private readonly context: CanvasRenderingContext2D,
+    private readonly id: boolean
   ) {
     this.width = width;
     this.height = height;
@@ -290,6 +296,15 @@ class Board {
 
   // Spawn a new piece at the top of the board
   spawnNewPiece() {
+    let myPenalties = [];
+    if (this.id) {
+      myPenalties = penalties.true;
+    } else {
+      myPenalties = penalties.false;
+    }
+    while (myPenalties.pop() !== undefined) {
+      this.addPenaltyLine();
+    }
     this.currentPiece = new Piece(4, 0);
   }
 
@@ -385,10 +400,36 @@ class Board {
     );
   };
 
+  pushPenaltyLine = () => {
+    if (this.id) {
+      penalties.false.push('');
+    } else {
+      penalties.true.push('');
+    }
+  };
+
   clearFullGridLines() {
     const nonFullRows = this.grid.filter((row) => row.includes(''));
 
     const newRowCount = this.grid.length - nonFullRows.length;
+
+    let limit = 0;
+
+    switch (newRowCount) {
+      case 2:
+        limit = 1;
+        break;
+      case 3:
+        limit = 2;
+        break;
+      case 4:
+        limit = 4;
+    }
+
+    for (let i = 0; i < limit; ++i) {
+      this.pushPenaltyLine();
+    }
+
     this.removedRows += newRowCount;
     this.restartInterval();
 
@@ -411,6 +452,20 @@ class Board {
   startGravity() {
     this.interval = setInterval(this.applyGravity, GRAVITY_SPEED_IN_MS);
   }
+
+  addPenaltyLine = () => {
+    this.grid.shift();
+    const newRow: ((typeof COLOURS)[number] | '')[] = [];
+    const randomHoleIndex = Math.floor(Math.random() * this.grid[0].length);
+    for (let i = 0; i < this.grid[0].length; i++) {
+      if (i === randomHoleIndex) {
+        newRow.push('');
+      } else {
+        newRow.push(COLOURS[Math.floor(Math.random() * COLOURS.length)]);
+      }
+    }
+    this.grid.push(newRow);
+  };
 }
 
 class Piece {
@@ -491,8 +546,20 @@ yourCanvas.width = BOARD_WIDTH * BLOCK_SIZE + 2; // Extra space for border
 yourCanvas.height = BOARD_HEIGHT * BLOCK_SIZE + 2; // Extra space for border
 
 // Create the game board
-const myBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE, myContext);
-const yourBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE, yourContext);
+const myBoard = new Board(
+  BOARD_WIDTH,
+  BOARD_HEIGHT,
+  BLOCK_SIZE,
+  myContext,
+  true
+);
+const yourBoard = new Board(
+  BOARD_WIDTH,
+  BOARD_HEIGHT,
+  BLOCK_SIZE,
+  yourContext,
+  false
+);
 
 // Handle key presses to move the piece
 function handleKeyPress(event: KeyboardEvent) {
