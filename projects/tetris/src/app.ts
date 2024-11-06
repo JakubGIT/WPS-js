@@ -141,6 +141,10 @@ const SHAPES = [
   [[[1], [1], [1], [1]], [[1, 1, 1, 1]], [[1], [1], [1], [1]], [[1, 1, 1, 1]]],
 ] as const;
 
+const GRAVITY_SPEED_IN_MS = 1000;
+const LEVEL_DECREASE_IN_MS = 400;
+const MAX_SPEED_IN_MS = 100;
+
 class Board {
   width: number;
   height: number;
@@ -148,8 +152,15 @@ class Board {
   blockSize: number;
   currentPiece: Piece;
   gameOver = false;
+  private removedRows = 0;
+  private interval: any;
 
-  constructor(width: number, height: number, blockSize: number) {
+  constructor(
+    width: number,
+    height: number,
+    blockSize: number,
+    private readonly context: CanvasRenderingContext2D
+  ) {
     this.width = width;
     this.height = height;
     this.blockSize = blockSize;
@@ -158,18 +169,18 @@ class Board {
   }
 
   // Draw the grid and the current piece
-  draw(context: CanvasRenderingContext2D) {
+  draw() {
     // Draw the grid with borders
-    this.drawGrid(context);
+    this.drawGrid(this.context);
 
     if (this.checkCollision()) {
       this.gameOver = true;
-      this.drawGameOver(context);
+      this.drawGameOver(this.context);
       // TODO: render only a part of the piece to avoid overlapping
     }
 
     // Draw the current piece
-    this.currentPiece.draw(context, this.blockSize);
+    this.currentPiece.draw(this.context, this.blockSize);
   }
 
   // Draw the grid (including borders)
@@ -287,6 +298,7 @@ class Board {
     if (this.gameOver) {
       return;
     }
+    this.restartInterval();
     this.currentPiece.moveDown();
     if (this.checkCollision()) {
       this.currentPiece.y -= 1; // Undo the move if a collision occurred
@@ -359,17 +371,43 @@ class Board {
     }
   }
 
+  restartInterval = () => {
+    clearInterval(this.interval);
+    this.interval = setInterval(
+      this.applyGravity,
+      Math.max(
+        GRAVITY_SPEED_IN_MS -
+          Math.floor(this.removedRows / 10) * LEVEL_DECREASE_IN_MS,
+        MAX_SPEED_IN_MS
+      )
+    );
+  };
+
   clearFullGridLines() {
     const nonFullRows = this.grid.filter((row) => row.includes(''));
 
     const newRowCount = this.grid.length - nonFullRows.length;
+    this.removedRows += newRowCount;
+    this.restartInterval();
 
     const newRow = new Array(this.grid[0].length).fill(''); // Create a new row filled with 0's
     for (let i = 0; i < newRowCount; i++) {
       nonFullRows.unshift(newRow); // Add the new row at the beginning
-      console.log(i);
     }
     this.grid = nonFullRows;
+  }
+
+  getLevel() {
+    return this.removedRows;
+  }
+
+  applyGravity = () => {
+    this.softDrop();
+    this.draw();
+  };
+
+  startGravity() {
+    this.interval = setInterval(this.applyGravity, GRAVITY_SPEED_IN_MS);
   }
 }
 
@@ -433,6 +471,10 @@ class Piece {
 const canvas = document.getElementById('myCanvas') as HTMLCanvasElement;
 const context = canvas.getContext('2d');
 
+if (!context) {
+  throw new Error('fuck');
+}
+
 // Set up constants
 const BOARD_WIDTH = 10;
 const BOARD_HEIGHT = 20;
@@ -443,7 +485,7 @@ canvas.width = BOARD_WIDTH * BLOCK_SIZE + 2; // Extra space for border
 canvas.height = BOARD_HEIGHT * BLOCK_SIZE + 2; // Extra space for border
 
 // Create the game board
-const board = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE);
+const board = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE, context);
 
 // Handle key presses to move the piece
 function handleKeyPress(event: KeyboardEvent) {
@@ -456,7 +498,6 @@ function handleKeyPress(event: KeyboardEvent) {
 
       break;
     case 'ArrowDown':
-      restartTimeout();
       board.softDrop();
       break;
     case 'ArrowUp':
@@ -471,25 +512,10 @@ function handleKeyPress(event: KeyboardEvent) {
 
 // Draw everything (board + piece)
 function draw() {
-  if (!context) {
-    return;
-  }
-  board.draw(context);
+  board.draw();
 }
 
 // Set up event listener for keypress
 document.addEventListener('keydown', handleKeyPress);
 
-const GRAVITY_SPEED_IN_MS = 1000;
-const applyGravity = () => {
-  board.softDrop();
-  draw();
-};
-
-// Initial draw
-let timeout = setInterval(applyGravity, GRAVITY_SPEED_IN_MS);
-
-const restartTimeout = () => {
-  clearInterval(timeout);
-  timeout = setInterval(applyGravity, GRAVITY_SPEED_IN_MS);
-};
+board.startGravity();
