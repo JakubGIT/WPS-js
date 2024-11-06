@@ -174,19 +174,22 @@ class Board {
     Array.from({ length: SHAPES.length }, (_, i) => i)
   );
   score = 0;
+  nextPiece: Piece;
 
   constructor(
     width: number,
     height: number,
     blockSize: number,
     private readonly context: CanvasRenderingContext2D,
-    private readonly id: boolean
+    private readonly id: boolean,
+    private readonly nextPieceCanvas: HTMLCanvasElement // Constructor now accepts the next piece canvas
   ) {
     this.width = width;
     this.height = height;
     this.blockSize = blockSize;
     this.grid = Array.from({ length: height }, () => Array(width).fill(''));
     this.currentPiece = new Piece(4, 0, this.getNewShape());
+    this.nextPiece = new Piece(4, 0, this.getNewShape());
   }
 
   private getNewShape = (): (typeof SHAPES)[number] => {
@@ -216,6 +219,38 @@ class Board {
 
     // Draw the current piece
     this.currentPiece.draw(this.context, this.blockSize);
+
+    const nextContext = this.nextPieceCanvas.getContext('2d');
+    if (nextContext) {
+      this.drawNextPiece(nextContext);
+    }
+  }
+
+  // Draw the next piece in the next piece canvas
+  drawNextPiece(context: CanvasRenderingContext2D) {
+    const shape = this.nextPiece.getCurrentShape();
+    const blockSize = 30; // Set a fixed block size for the next piece canvas
+
+    context.clearRect(
+      0,
+      0,
+      this.nextPieceCanvas!.width,
+      this.nextPieceCanvas!.height
+    );
+
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (shape[row][col] === 1) {
+          context.fillStyle = this.nextPiece.color;
+          context.fillRect(
+            col * blockSize,
+            row * blockSize,
+            blockSize,
+            blockSize
+          );
+        }
+      }
+    }
   }
 
   // Draw the grid (including borders)
@@ -334,7 +369,8 @@ class Board {
     while (myPenalties.pop() !== undefined) {
       this.addPenaltyLine();
     }
-    this.currentPiece = new Piece(4, 0, this.getNewShape());
+    this.currentPiece = this.nextPiece;
+    this.nextPiece = new Piece(4, 0, this.getNewShape());
   }
 
   // Soft drop the current piece (move down)
@@ -566,8 +602,14 @@ class Piece {
 // Get the canvas element and its context
 const myCanvas = document.getElementById('myCanvas') as HTMLCanvasElement;
 const myContext = myCanvas.getContext('2d');
+const myNextPieceCanvas = document.getElementById(
+  'myNextPiece'
+) as HTMLCanvasElement;
 const yourCanvas = document.getElementById('yourCanvas') as HTMLCanvasElement;
 const yourContext = yourCanvas.getContext('2d');
+const yourNextPieceCanvas = document.getElementById(
+  'yourNextPiece'
+) as HTMLCanvasElement;
 
 if (!myContext || !yourContext) {
   throw new Error('fuck');
@@ -590,14 +632,16 @@ const myBoard = new Board(
   BOARD_HEIGHT,
   BLOCK_SIZE,
   myContext,
-  true
+  true,
+  myNextPieceCanvas
 );
 const yourBoard = new Board(
   BOARD_WIDTH,
   BOARD_HEIGHT,
   BLOCK_SIZE,
   yourContext,
-  false
+  false,
+  yourNextPieceCanvas
 );
 
 // Handle key presses to move the piece
