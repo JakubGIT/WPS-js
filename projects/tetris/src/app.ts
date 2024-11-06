@@ -153,7 +153,7 @@ class Board {
     this.width = width;
     this.height = height;
     this.blockSize = blockSize;
-    this.grid = Array.from({ length: height }, () => Array(width).fill(0));
+    this.grid = Array.from({ length: height }, () => Array(width).fill(''));
     this.currentPiece = new Piece(4, 0);
   }
 
@@ -274,6 +274,7 @@ class Board {
         }
       }
     }
+    this.clearFullGridLines();
   }
 
   // Spawn a new piece at the top of the board
@@ -356,6 +357,19 @@ class Board {
     if (this.checkCollision()) {
       this.currentPiece.moveLeft(); // Undo the movement
     }
+  }
+
+  clearFullGridLines() {
+    const nonFullRows = this.grid.filter((row) => row.includes(''));
+
+    const newRowCount = this.grid.length - nonFullRows.length;
+
+    const newRow = new Array(this.grid[0].length).fill(''); // Create a new row filled with 0's
+    for (let i = 0; i < newRowCount; i++) {
+      nonFullRows.unshift(newRow); // Add the new row at the beginning
+      console.log(i);
+    }
+    this.grid = nonFullRows;
   }
 }
 
@@ -466,16 +480,16 @@ function draw() {
 // Set up event listener for keypress
 document.addEventListener('keydown', handleKeyPress);
 
-const GRAVITY_SPEED_IN_MS = 1000
-const applyGravity = ()=>{
+const GRAVITY_SPEED_IN_MS = 1000;
+const applyGravity = () => {
   board.softDrop();
   draw();
-}
+};
 
 // Initial draw
 let timeout = setInterval(applyGravity, GRAVITY_SPEED_IN_MS);
 
-const restartTimeout=()=>{
-  clearInterval(timeout)
+const restartTimeout = () => {
+  clearInterval(timeout);
   timeout = setInterval(applyGravity, GRAVITY_SPEED_IN_MS);
-}
+};
