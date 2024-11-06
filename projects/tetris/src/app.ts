@@ -360,6 +360,7 @@ class Board {
     const currentPieceBackup = this.currentPiece;
     while (currentPieceBackup === this.currentPiece) {
       this.softDrop();
+      this.score += 1;
     }
   }
 
