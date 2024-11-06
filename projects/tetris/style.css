@@ -6,7 +6,8 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   display: flex;
   justify-content: center;
@@ -14,15 +15,56 @@ html, body {
   background-color: #f4f4f4;
 }
 
-#container {
-  width: 80%;
-  height: 80%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
 canvas {
   border: 1px solid #000;
   background-color: #ffffff;
+}
+
+/* Container to position the score */
+#container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3rem;
+  flex-direction: row;
+  min-width: 1000px;
+}
+
+/* Style for the score container */
+#myScore,
+#yourScore {
+  position: absolute;
+  top: 10px; /* Adjust the position of the score */
+  font-family: 'Arial', sans-serif;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+  font-size: 20px;
+  padding: 5px 10px;
+  background: rgba(0, 0, 0, 0.5); /* Semi-transparent background */
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.8);
+  transition: all 0.2s ease-in-out;
+  z-index: 10;
+}
+
+/* Style for the score when the game is paused or the user is inactive */
+#myScore,
+#yourScore {
+  background-color: rgba(0, 0, 0, 0.7); /* Darker background for the score */
+  padding: 12px 20px;
+  font-size: 24px;
+  border-radius: 8px;
+  box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.8);
+  text-align: center;
+}
+
+#myScore {
+  left: 20px;
+  top: 20px;
+}
+
+#yourScore {
+  right: 20px;
+  top: 20px;
 }

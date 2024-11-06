@@ -173,6 +173,7 @@ class Board {
   private shapesIndexes: number[] = shuffleArray(
     Array.from({ length: SHAPES.length }, (_, i) => i)
   );
+  score = 0;
 
   constructor(
     width: number,
@@ -444,13 +445,19 @@ class Board {
     let limit = 0;
 
     switch (newRowCount) {
+      case 1:
+        this.score += 40;
+        break;
       case 2:
+        this.score += 100;
         limit = 1;
         break;
       case 3:
+        this.score += 300;
         limit = 2;
         break;
       case 4:
+        this.score += 1200;
         limit = 4;
     }
 
@@ -636,6 +643,9 @@ function handleKeyPress(event: KeyboardEvent) {
 function draw() {
   myBoard.draw();
   yourBoard.draw();
+
+  document.getElementById('myScore')!.innerText = `Score: ${myBoard.score}`;
+  document.getElementById('yourScore')!.innerText = `Score: ${yourBoard.score}`;
 }
 
 // Set up event listener for keypress
