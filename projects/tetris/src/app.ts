@@ -244,17 +244,14 @@ class Board {
 
   // Check if the current piece collides with the grid (e.g., the bottom or other pieces)
   checkCollision(): boolean {
-    for (let row = 0; row < this.currentPiece.getCurrentShape().length; row++) {
-      for (
-        let col = 0;
-        col < this.currentPiece.getCurrentShape()[row].length;
-        col++
-      ) {
+    const shape = this.currentPiece.getCurrentShape();
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
         if (
-          (this.currentPiece.getCurrentShape()[row][col] === 1 &&
-            this.currentPiece.x + col >= this.width) || // Right side out of bounds
-          this.currentPiece.y + row >= this.height || // Hits the bottom
-          this.grid[this.currentPiece.y + row]?.[this.currentPiece.x + col] // Collides with other pieces
+          shape[row][col] === 1 &&
+          (this.currentPiece.x + col >= this.width || // Right side out of bounds
+            this.currentPiece.y + row >= this.height || // Hits the bottom
+            this.grid[this.currentPiece.y + row]?.[this.currentPiece.x + col]) // Collides with other pieces
         ) {
           return true;
         }
