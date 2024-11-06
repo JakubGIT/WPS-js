@@ -217,6 +217,9 @@ class Board {
       // TODO: render only a part of the piece to avoid overlapping
     }
 
+    // Draw the ghost piece before the actual piece
+    this.drawGhostPiece(this.context);
+
     // Draw the current piece
     this.currentPiece.draw(this.context, this.blockSize);
 
@@ -224,6 +227,57 @@ class Board {
     if (nextContext) {
       this.drawNextPiece(nextContext);
     }
+  }
+
+  // Draw the ghost piece (shadow of the current piece)
+  drawGhostPiece(context: CanvasRenderingContext2D) {
+    const shape = this.currentPiece.getCurrentShape();
+    const blockSize = 30; // Set a fixed block size for the next piece canvas
+
+    // Simulate where the piece would land (move it down until collision)
+    let ghostY = this.currentPiece.y;
+    while (!this.checkCollisionAt(this.currentPiece.x, ghostY + 1)) {
+      ghostY += 1; // Move down until collision
+    }
+
+    // Set the shadow color (lighter than the piece)
+    context.globalAlpha = 0.5; // Make the ghost piece semi-transparent
+
+    // Draw the ghost piece at the landing position
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (shape[row][col] === 1) {
+          context.fillStyle = this.currentPiece.color; // Use the same color for the ghost piece
+          context.fillRect(
+            (this.currentPiece.x + col) * blockSize + 1,
+            (ghostY + row) * blockSize + 1,
+            blockSize,
+            blockSize
+          );
+        }
+      }
+    }
+
+    // Reset the global alpha back to normal
+    context.globalAlpha = 1;
+  }
+
+  // Helper function to check if the piece at position x, y collides
+  checkCollisionAt(x: number, y: number): boolean {
+    const shape = this.currentPiece.getCurrentShape();
+    for (let row = 0; row < shape.length; row++) {
+      for (let col = 0; col < shape[row].length; col++) {
+        if (
+          shape[row][col] === 1 &&
+          (x + col >= this.width || // Right side out of bounds
+            y + row >= this.height || // Hits the bottom
+            this.grid[y + row]?.[x + col]) // Collides with other pieces
+        ) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   // Draw the next piece in the next piece canvas
