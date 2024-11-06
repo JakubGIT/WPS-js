@@ -153,7 +153,7 @@ class Board {
   currentPiece: Piece;
   gameOver = false;
   private removedRows = 0;
-  private interval: any;
+  private interval: number | undefined;
 
   constructor(
     width: number,
