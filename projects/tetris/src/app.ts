@@ -1,3 +1,14 @@
+function shuffleArray<T extends unknown[]>(arr: T) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    // Random index from 0 to i
+    const randomIndex = Math.floor(Math.random() * (i + 1));
+
+    // Swap elements at index i and randomIndex
+    [arr[i], arr[randomIndex]] = [arr[randomIndex], arr[i]];
+  }
+  return arr;
+}
+
 const COLOURS = [
   '#ffb3ba',
   '#ffdfba',
@@ -115,25 +126,25 @@ const SHAPES = [
     ],
   ],
 
-  // Shape 6: Reverse L-Shape
+  // Shape 6: Reverse Z-Shape
   [
     [
       [0, 1],
+      [1, 1],
+      [1, 0],
+    ],
+    [
+      [1, 1, 0],
+      [0, 1, 1],
+    ],
+    [
       [0, 1],
       [1, 1],
-    ],
-    [
-      [1, 0, 0],
-      [1, 1, 1],
-    ],
-    [
-      [1, 1],
-      [1, 0],
       [1, 0],
     ],
     [
-      [1, 1, 1],
-      [0, 0, 1],
+      [1, 1, 0],
+      [0, 1, 1],
     ],
   ],
 
@@ -159,6 +170,9 @@ class Board {
   gameOver = false;
   private removedRows = 0;
   private interval: number | undefined;
+  private shapesIndexes: number[] = shuffleArray(
+    Array.from({ length: SHAPES.length }, (_, i) => i)
+  );
 
   constructor(
     width: number,
@@ -171,8 +185,22 @@ class Board {
     this.height = height;
     this.blockSize = blockSize;
     this.grid = Array.from({ length: height }, () => Array(width).fill(''));
-    this.currentPiece = new Piece(4, 0);
+    this.currentPiece = new Piece(4, 0, this.getNewShape());
   }
+
+  private getNewShape = (): (typeof SHAPES)[number] => {
+    const nextIndex = this.shapesIndexes.pop();
+
+    if (nextIndex !== undefined) {
+      return SHAPES[nextIndex];
+    }
+
+    this.shapesIndexes = shuffleArray(
+      Array.from({ length: SHAPES.length }, (_, i) => i)
+    );
+
+    return SHAPES[this.shapesIndexes.pop()!];
+  };
 
   // Draw the grid and the current piece
   draw() {
@@ -305,7 +333,7 @@ class Board {
     while (myPenalties.pop() !== undefined) {
       this.addPenaltyLine();
     }
-    this.currentPiece = new Piece(4, 0);
+    this.currentPiece = new Piece(4, 0, this.getNewShape());
   }
 
   // Soft drop the current piece (move down)
@@ -473,14 +501,17 @@ class Piece {
   x: number;
   y: number;
   color: (typeof COLOURS)[number];
-  private readonly shape: (typeof SHAPES)[number];
+
   private rotation: number = 0;
 
-  constructor(x: number, y: number) {
+  constructor(
+    x: number,
+    y: number,
+    private readonly shape: (typeof SHAPES)[number]
+  ) {
     this.x = x;
     this.y = y;
     this.color = COLOURS[Math.floor(Math.random() * COLOURS.length)];
-    this.shape = SHAPES[Math.floor(Math.random() * SHAPES.length)];
   }
 
   getCurrentShape = () => this.shape[this.rotation];
