@@ -282,7 +282,7 @@ class Board {
   }
 
   // Soft drop the current piece (move down)
-  softDrop() {
+  softDrop = () => {
     if (this.gameOver) {
       return;
     }
@@ -292,7 +292,7 @@ class Board {
       this.placePiece();
       this.spawnNewPiece();
     }
-  }
+  };
 
   hardDrop() {
     if (this.gameOver) {
@@ -442,6 +442,7 @@ function handleKeyPress(event: KeyboardEvent) {
 
       break;
     case 'ArrowDown':
+      restartTimeout();
       board.softDrop();
       break;
     case 'ArrowUp':
@@ -465,5 +466,16 @@ function draw() {
 // Set up event listener for keypress
 document.addEventListener('keydown', handleKeyPress);
 
+const GRAVITY_SPEED_IN_MS = 1000
+const applyGravity = ()=>{
+  board.softDrop();
+  draw();
+}
+
 // Initial draw
-draw();
+let timeout = setInterval(applyGravity, GRAVITY_SPEED_IN_MS);
+
+const restartTimeout=()=>{
+  clearInterval(timeout)
+  timeout = setInterval(applyGravity, GRAVITY_SPEED_IN_MS);
+}
