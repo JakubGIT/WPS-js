@@ -231,12 +231,19 @@ class Board {
     const shape = this.nextPiece.getCurrentShape();
     const blockSize = 30; // Set a fixed block size for the next piece canvas
 
+    // Clear the canvas before drawing
     context.clearRect(
       0,
       0,
       this.nextPieceCanvas!.width,
       this.nextPieceCanvas!.height
     );
+
+    // Apply the shadow effect
+    context.shadowColor = 'rgba(0, 0, 0, 0.5)'; // Shadow color
+    context.shadowBlur = 10; // Blur amount
+    context.shadowOffsetX = 3; // Horizontal shadow offset
+    context.shadowOffsetY = 3; // Vertical shadow offset
 
     for (let row = 0; row < shape.length; row++) {
       for (let col = 0; col < shape[row].length; col++) {
@@ -251,6 +258,9 @@ class Board {
         }
       }
     }
+
+    // Reset shadow to prevent affecting other parts of the game
+    context.shadowColor = 'transparent'; // Remove shadow after drawing
   }
 
   // Draw the grid (including borders)
@@ -562,18 +572,49 @@ class Piece {
 
   // Draw the piece on the canvas
   draw(context: CanvasRenderingContext2D, blockSize: number) {
-    context.fillStyle = this.color;
+    const gradient = context.createLinearGradient(0, 0, blockSize, blockSize);
+    gradient.addColorStop(0, '#fff');
+    gradient.addColorStop(1, this.color);
+
+    context.fillStyle = gradient;
+    context.shadowColor = 'rgba(0, 0, 0, 0.5)'; // Shadow color
+    context.shadowBlur = 10; // Blur amount
+    context.shadowOffsetX = 3; // Horizontal shadow offset
+    context.shadowOffsetY = 3; // Vertical shadow offset
 
     // Draw each block of the piece
     for (let row = 0; row < this.shape[this.rotation].length; row++) {
       for (let col = 0; col < this.shape[this.rotation][row].length; col++) {
         if (this.getCurrentShape()[row][col] === 1) {
-          context.fillRect(
-            (this.x + col) * blockSize + 1,
-            (this.y + row) * blockSize + 1,
-            blockSize,
-            blockSize
+          const x = (this.x + col) * blockSize + 1;
+          const y = (this.y + row) * blockSize + 1;
+
+          // Draw a rounded rectangle with a gradient
+          context.beginPath();
+          context.moveTo(x + 1, y);
+          context.arcTo(
+            x + blockSize - 1,
+            y,
+            x + blockSize - 1,
+            y + blockSize,
+            1
           );
+          context.arcTo(
+            x + blockSize - 1,
+            y + blockSize,
+            x + 1,
+            y + blockSize,
+            1
+          );
+          context.arcTo(x + 1, y + blockSize, x + 1, y, 1);
+          context.arcTo(x + 1, y, x + 1, y + 1, 1);
+          context.closePath();
+          context.fill();
+
+          // Add a darker border for contrast
+          context.lineWidth = 2;
+          context.strokeStyle = '#000'; // Dark border
+          context.stroke();
         }
       }
     }
