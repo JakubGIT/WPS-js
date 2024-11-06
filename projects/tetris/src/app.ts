@@ -294,11 +294,13 @@ class Board {
   }
 
   // Soft drop the current piece (move down)
-  softDrop = () => {
+  softDrop = (gravity?: boolean) => {
     if (this.gameOver) {
       return;
     }
-    this.restartInterval();
+    if (!gravity) {
+      this.restartInterval();
+    }
     this.currentPiece.moveDown();
     if (this.checkCollision()) {
       this.currentPiece.y -= 1; // Undo the move if a collision occurred
@@ -402,7 +404,7 @@ class Board {
   }
 
   applyGravity = () => {
-    this.softDrop();
+    this.softDrop(true);
     this.draw();
   };
 
@@ -468,10 +470,12 @@ class Piece {
 }
 
 // Get the canvas element and its context
-const canvas = document.getElementById('myCanvas') as HTMLCanvasElement;
-const context = canvas.getContext('2d');
+const myCanvas = document.getElementById('myCanvas') as HTMLCanvasElement;
+const myContext = myCanvas.getContext('2d');
+const yourCanvas = document.getElementById('yourCanvas') as HTMLCanvasElement;
+const yourContext = yourCanvas.getContext('2d');
 
-if (!context) {
+if (!myContext || !yourContext) {
   throw new Error('fuck');
 }
 
@@ -481,30 +485,50 @@ const BOARD_HEIGHT = 20;
 const BLOCK_SIZE = 30; // Size of each block in pixels
 
 // Set canvas dimensions based on the board size
-canvas.width = BOARD_WIDTH * BLOCK_SIZE + 2; // Extra space for border
-canvas.height = BOARD_HEIGHT * BLOCK_SIZE + 2; // Extra space for border
+myCanvas.width = BOARD_WIDTH * BLOCK_SIZE + 2; // Extra space for border
+myCanvas.height = BOARD_HEIGHT * BLOCK_SIZE + 2; // Extra space for border
+yourCanvas.width = BOARD_WIDTH * BLOCK_SIZE + 2; // Extra space for border
+yourCanvas.height = BOARD_HEIGHT * BLOCK_SIZE + 2; // Extra space for border
 
 // Create the game board
-const board = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE, context);
+const myBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE, myContext);
+const yourBoard = new Board(BOARD_WIDTH, BOARD_HEIGHT, BLOCK_SIZE, yourContext);
 
 // Handle key presses to move the piece
 function handleKeyPress(event: KeyboardEvent) {
   switch (event.key) {
     case 'ArrowLeft':
-      board.movePieceLeft();
+      myBoard.movePieceLeft();
       break;
     case 'ArrowRight':
-      board.movePieceRight();
+      myBoard.movePieceRight();
 
       break;
     case 'ArrowDown':
-      board.softDrop();
+      myBoard.softDrop();
       break;
     case 'ArrowUp':
-      board.rotate();
+      myBoard.rotate();
       break;
     case ' ':
-      board.hardDrop();
+      myBoard.hardDrop();
+      break;
+
+    case 'a':
+      yourBoard.movePieceLeft();
+      break;
+    case 'd':
+      yourBoard.movePieceRight();
+
+      break;
+    case 's':
+      yourBoard.softDrop();
+      break;
+    case 'w':
+      yourBoard.rotate();
+      break;
+    case 'f':
+      yourBoard.hardDrop();
       break;
   }
   draw(); // Redraw the board and piece
@@ -512,10 +536,12 @@ function handleKeyPress(event: KeyboardEvent) {
 
 // Draw everything (board + piece)
 function draw() {
-  board.draw();
+  myBoard.draw();
+  yourBoard.draw();
 }
 
 // Set up event listener for keypress
 document.addEventListener('keydown', handleKeyPress);
 
-board.startGravity();
+myBoard.startGravity();
+yourBoard.startGravity();
